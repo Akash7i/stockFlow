@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<h4>Inventory Dashboard</h4>
+
+<div class="row">
+  <div class="col-md-8">
+    <canvas id="stockChart" height="120"></canvas>
+  </div>
+  <div class="col-md-4">
+    <h5>Low Stock Alerts</h5>
+    {% if low_stock %}
+      <ul class="list-group">
+        {% for p in low_stock %}
+          <li class="list-group-item low-stock">
+            ⚠️ {{ p['name'] }} — Qty: {{ p.qty }} (Reorder at {{ p.reorder_level }})
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="info">No low stock items. 👍</div>
+    {% endif %}
+    <hr>
+    <a class="btn btn-primary mt-3" href="{{ url_for('products_page') }}">Manage Products</a>
+  </div>
+</div>
+
+<h5 class="mt-4">Products</h5>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Price</th>
+      <th>Qty</th>
+      <th>Reorder Level</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for p in products %}
+    <tr class="{% if p.qty <= p.reorder_level %}low-stock{% endif %}">
+      <td>{{ p['name'] }}</td>
+      <td>₹{{ '%.2f'|format(p.price) }}</td>
+      <td>{{ p.qty }}</td>
+      <td>{{ p.reorder_level }}</td>
+      <td>
+        <a class="btn btn-secondary btn-sm" href="{{ url_for('edit_product', pid=p.id) }}">Edit</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<script>
+  const labels = JSON.parse('{{ chart_labels|tojson|safe }}');
+  const data = JSON.parse('{{ chart_data|tojson|safe }}');
+
+  const ctx = document.getElementById('stockChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Quantity',
+        data: data,
+        backgroundColor: 'rgba(54, 162, 235, 0.6)'
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+</script>
+{% endblock %}
