@@ -1,283 +1,272 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, send_file, jsonify
-import pandas as pd
-import io
-from datetime import datetime
+from flask import Flask, render_template, request, jsonify, send_file
 import mysql.connector
+from datetime import datetime
+import io
+import csv
 
 app = Flask(__name__)
-app.secret_key = "change_this_secret_for_prod"
 
 # -------------------------
-# MYSQL CONNECTION
+# MySQL CONNECTION
 # -------------------------
-def get_db_connection():
+def get_db():
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="root",   # 🔥 change this
-        database="inventory_db"
+        password="root",
+        database="stock"
     )
 
 # -------------------------
-# DASHBOARD
+# AUTO CREATE TABLES
+# -------------------------
+def init_db():
+    conn = get_db()
+    cur = conn.cursor()
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS products (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(255) UNIQUE NOT NULL,
+            price DECIMAL(10,2) DEFAULT 0,
+            qty INT DEFAULT 0,
+            reorder_level INT DEFAULT 10,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS bills (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            total_amount DECIMAL(10,2) DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
+
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS bill_items (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            bill_id INT NOT NULL,
+            product_name VARCHAR(255),
+            qty INT,
+            price DECIMAL(10,2),
+            FOREIGN KEY (bill_id) REFERENCES bills(id) ON DELETE CASCADE
+        )
+    """)
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+# -------------------------
+# SERVE MAIN PAGE
 # -------------------------
 @app.route("/")
-def dashboard():
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+def index():
+    return render_template("stock7flow_iphone.html")
 
-    cursor.execute("SELECT * FROM product ORDER BY name")
-    products = cursor.fetchall()
-
-    low_stock = [p for p in products if p["qty"] <= p["reorder_level"]]
-    labels = [p["name"] for p in products]
-    data_qty = [p["qty"] for p in products]
-
-    cursor.close()
+# -------------------------
+# PRODUCTS API
+# -------------------------
+@app.route("/api/products", methods=["GET"])
+def get_products():
+    conn = get_db()
+    cur = conn.cursor(dictionary=True)
+    cur.execute("SELECT * FROM products ORDER BY name")
+    products = cur.fetchall()
+    cur.close()
     conn.close()
+    # Convert Decimal to float for JSON
+    for p in products:
+        p["price"] = float(p["price"])
+    return jsonify(products)
 
-    return render_template("dashboard.html",
-                           products=products,
-                           low_stock=low_stock,
-                           chart_labels=labels,
-                           chart_data=data_qty)
 
-# -------------------------
-# PRODUCTS
-# -------------------------
-@app.route("/products", methods=["GET", "POST"])
-def products_page():
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+@app.route("/api/products", methods=["POST"])
+def add_product():
+    data = request.json
+    name = (data.get("name") or "").strip()
+    price = float(data.get("price") or 0)
+    qty = int(data.get("qty") or 0)
+    reorder = int(data.get("reorder") or 10)
 
-    if request.method == "POST":
-        name = (request.form.get("name") or "").strip()
-        price = float(request.form.get("price") or 0)
-        qty = int(request.form.get("qty") or 0)
-        reorder = int(request.form.get("reorder_level") or 10)
+    if not name:
+        return jsonify({"error": "Name required"}), 400
 
-        if not name:
-            flash("Product name is required.", "danger")
-            return redirect(url_for("products_page"))
-
-        try:
-            cursor.execute(
-                "INSERT INTO product (name, price, qty, reorder_level) VALUES (%s,%s,%s,%s)",
-                (name, price, qty, reorder)
-            )
-            conn.commit()
-            flash(f"Product '{name}' added.", "success")
-        except:
-            flash("Product already exists.", "warning")
-
-        return redirect(url_for("products_page"))
-
-    cursor.execute("SELECT * FROM product ORDER BY name")
-    products = cursor.fetchall()
-
-    cursor.close()
-    conn.close()
-
-    return render_template("products.html", products=products)
-
-# -------------------------
-# EDIT PRODUCT
-# -------------------------
-@app.route("/product/edit/<int:pid>", methods=["GET", "POST"])
-def edit_product(pid):
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    cursor.execute("SELECT * FROM product WHERE id = %s", (pid,))
-    p = cursor.fetchone()
-
-    if not p:
-        flash("Product not found", "danger")
-        return redirect(url_for("products_page"))
-
-    if request.method == "POST":
-        action = request.form.get("action")
-
-        if action == "add_qty":
-            add_qty = int(request.form.get("add_qty") or 0)
-
-            if add_qty > 0:
-                cursor.execute(
-                    "UPDATE product SET qty = qty + %s WHERE id = %s",
-                    (add_qty, pid)
-                )
-                conn.commit()
-                flash(f"Added {add_qty} units to {p['name']}", "success")
-            else:
-                flash("Invalid quantity", "warning")
-
-            return redirect(url_for("products_page"))
-
-        elif action == "edit_all":
-            name = request.form.get("name")
-            price = float(request.form.get("price") or 0)
-            qty = int(request.form.get("qty") or 0)
-            reorder = int(request.form.get("reorder_level") or 10)
-
-            try:
-                cursor.execute("""
-                    UPDATE product 
-                    SET name=%s, price=%s, qty=%s, reorder_level=%s
-                    WHERE id=%s
-                """, (name, price, qty, reorder, pid))
-
-                conn.commit()
-                flash("Product updated", "success")
-
-            except:
-                flash("Error updating product", "danger")
-
-            return redirect(url_for("products_page"))
-
-    cursor.close()
-    conn.close()
-
-    return render_template("edit_product.html", p=p)
-
-# -------------------------
-# ✅ DELETE PRODUCT (FIXED)
-# -------------------------
-@app.route("/product/delete/<int:pid>", methods=["POST"])
-def delete_product(pid):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
+    conn = get_db()
+    cur = conn.cursor()
     try:
-        cursor.execute("DELETE FROM product WHERE id = %s", (pid,))
+        cur.execute(
+            "INSERT INTO products (name, price, qty, reorder_level) VALUES (%s,%s,%s,%s)",
+            (name, price, qty, reorder)
+        )
         conn.commit()
-        flash("Product deleted successfully", "info")
-    except:
-        flash("Error deleting product", "danger")
+        new_id = cur.lastrowid
+        cur.close()
+        conn.close()
+        return jsonify({"id": new_id, "name": name, "price": price, "qty": qty, "reorder": reorder}), 201
+    except mysql.connector.IntegrityError:
+        cur.close()
+        conn.close()
+        return jsonify({"error": "Product already exists"}), 409
 
-    cursor.close()
+
+@app.route("/api/products/<int:pid>", methods=["PUT"])
+def update_product(pid):
+    data = request.json
+    name = (data.get("name") or "").strip()
+    price = float(data.get("price") or 0)
+    qty = int(data.get("qty") or 0)
+    reorder = int(data.get("reorder") or 10)
+
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE products SET name=%s, price=%s, qty=%s, reorder_level=%s WHERE id=%s",
+        (name, price, qty, reorder, pid)
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({"success": True})
+
+
+@app.route("/api/products/<int:pid>", methods=["DELETE"])
+def delete_product(pid):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM products WHERE id=%s", (pid,))
+    conn.commit()
+    cur.close()
+    conn.close()
+    return jsonify({"success": True})
+
+# -------------------------
+# BILLING API
+# -------------------------
+@app.route("/api/bills", methods=["POST"])
+def create_bill():
+    """
+    Expects JSON:
+    {
+      "items": [
+        {"product_id": 1, "product_name": "Tomatoes", "qty": 2, "price": 25.0},
+        ...
+      ],
+      "total": 50.0
+    }
+    """
+    data = request.json
+    items = data.get("items", [])
+    total = float(data.get("total", 0))
+
+    if not items:
+        return jsonify({"error": "No items"}), 400
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    # Check stock availability & deduct
+    for item in items:
+        pid = item.get("product_id")
+        sold_qty = int(item.get("qty", 0))
+
+        cur.execute("SELECT qty FROM products WHERE id=%s", (pid,))
+        row = cur.fetchone()
+        if not row:
+            conn.rollback()
+            cur.close()
+            conn.close()
+            return jsonify({"error": f"Product ID {pid} not found"}), 404
+
+        available = row[0]
+        if sold_qty > available:
+            conn.rollback()
+            cur.close()
+            conn.close()
+            return jsonify({"error": f"Not enough stock for '{item.get('product_name')}'"}), 400
+
+        cur.execute(
+            "UPDATE products SET qty = qty - %s WHERE id=%s",
+            (sold_qty, pid)
+        )
+
+    # Insert bill
+    cur.execute(
+        "INSERT INTO bills (total_amount, created_at) VALUES (%s, %s)",
+        (total, datetime.now())
+    )
+    bill_id = cur.lastrowid
+
+    # Insert bill items
+    for item in items:
+        cur.execute(
+            "INSERT INTO bill_items (bill_id, product_name, qty, price) VALUES (%s,%s,%s,%s)",
+            (bill_id, item.get("product_name"), int(item.get("qty")), float(item.get("price")))
+        )
+
+    conn.commit()
+    cur.close()
     conn.close()
 
-    return redirect(url_for("products_page"))
+    return jsonify({"success": True, "bill_id": bill_id}), 201
 
-# -------------------------
-# BILLING
-# -------------------------
-@app.route("/billing", methods=["GET", "POST"])
-def billing():
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("SELECT * FROM product ORDER BY name")
-    products = cursor.fetchall()
+@app.route("/api/bills", methods=["GET"])
+def get_bills():
+    conn = get_db()
+    cur = conn.cursor(dictionary=True)
+    cur.execute("SELECT * FROM bills ORDER BY created_at DESC LIMIT 50")
+    bills = cur.fetchall()
 
-    bill_items = []
-    total = 0
+    result = []
+    for b in bills:
+        cur.execute("SELECT * FROM bill_items WHERE bill_id=%s", (b["id"],))
+        items = cur.fetchall()
+        for i in items:
+            i["price"] = float(i["price"])
+        result.append({
+            "id": b["id"],
+            "total": float(b["total_amount"]),
+            "date": b["created_at"].strftime("%d-%m-%Y %I:%M %p"),
+            "items": items
+        })
 
-    if request.method == "POST":
-
-        temp_items = []
-
-        for p in products:
-            field = f"qty_{p['id']}"
-
-            try:
-                sold_qty = int(request.form.get(field) or 0)
-            except:
-                sold_qty = 0
-
-            if sold_qty > 0:
-                if sold_qty > p["qty"]:
-                    flash(f"Not enough stock for {p['name']}", "warning")
-                else:
-                    subtotal = sold_qty * p["price"]
-                    temp_items.append((p, sold_qty, subtotal))
-
-        if not temp_items:
-            flash("No items sold.", "info")
-            return redirect(url_for("billing"))
-
-        cursor.execute(
-            "INSERT INTO bill (created_at, total_amount) VALUES (%s,%s)",
-            (datetime.now(), 0)
-        )
-        bill_id = cursor.lastrowid
-
-        for p, sold_qty, subtotal in temp_items:
-
-            cursor.execute(
-                "UPDATE product SET qty = qty - %s WHERE id = %s",
-                (sold_qty, p["id"])
-            )
-
-            cursor.execute(
-                "INSERT INTO bill_item (bill_id, product_name, qty, price) VALUES (%s,%s,%s,%s)",
-                (bill_id, p["name"], sold_qty, p["price"])
-            )
-
-            bill_items.append({
-                "name": p["name"],
-                "qty": sold_qty,
-                "price": p["price"],
-                "subtotal": subtotal
-            })
-
-            total += subtotal
-
-        cursor.execute(
-            "UPDATE bill SET total_amount=%s WHERE id=%s",
-            (total, bill_id)
-        )
-
-        conn.commit()
-
-    cursor.close()
+    cur.close()
     conn.close()
-
-    return render_template("billing.html",
-                           products=products,
-                           bill_items=bill_items,
-                           total=total,
-                           store_name="7 Store",
-                           store_address="Ganapathy, Coimbatore",
-                           now=datetime.now())
+    return jsonify(result)
 
 # -------------------------
-# EXPORT
+# EXPORT CSV
 # -------------------------
-@app.route("/export")
+@app.route("/api/export")
 def export_csv():
-    conn = get_db_connection()
-    df = pd.read_sql("SELECT * FROM product", conn)
+    conn = get_db()
+    cur = conn.cursor(dictionary=True)
+    cur.execute("SELECT id, name, price, qty, reorder_level FROM products ORDER BY name")
+    products = cur.fetchall()
+    cur.close()
+    conn.close()
 
     buf = io.StringIO()
-    df.to_csv(buf, index=False)
+    writer = csv.writer(buf)
+    writer.writerow(["ID", "Name", "Price", "Quantity", "Reorder Level"])
+    for p in products:
+        writer.writerow([p["id"], p["name"], float(p["price"]), p["qty"], p["reorder_level"]])
+
     buf.seek(0)
-
-    conn.close()
-
-    return send_file(io.BytesIO(buf.getvalue().encode()),
-                     mimetype="text/csv",
-                     as_attachment=True,
-                     download_name="stock_export.csv")
-
-# -------------------------
-# API
-# -------------------------
-@app.route("/api/products")
-def api_products():
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    cursor.execute("SELECT * FROM product")
-    products = cursor.fetchall()
-
-    cursor.close()
-    conn.close()
-
-    return jsonify(products)
+    return send_file(
+        io.BytesIO(buf.getvalue().encode()),
+        mimetype="text/csv",
+        as_attachment=True,
+        download_name="stock7flow_export.csv"
+    )
 
 # -------------------------
 # RUN
 # -------------------------
 if __name__ == "__main__":
+    init_db()
+    print("✅ Database tables initialized")
+    print("🚀 Stock7Flow running at http://localhost:5000")
     app.run(debug=True)

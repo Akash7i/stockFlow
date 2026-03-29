@@ -1,24 +1,27 @@
-CREATE DATABASE inventory_db;
-USE inventory_db;
+CREATE DATABASE stock;
 
-CREATE TABLE product (
+USE stock;
+
+CREATE TABLE products (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(120) UNIQUE,
-    price FLOAT,
-    qty INT,
-    reorder_level INT
+    name VARCHAR(255) UNIQUE NOT NULL,
+    price DECIMAL(10,2) DEFAULT 0,
+    qty INT DEFAULT 0,
+    reorder_level INT DEFAULT 10,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE bill (
+CREATE TABLE bills (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    created_at DATETIME,
-    total_amount FLOAT
+    total_amount DECIMAL(10,2) DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE bill_item (
+CREATE TABLE bill_items (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    bill_id INT,
-    product_name VARCHAR(120),
+    bill_id INT NOT NULL,
+    product_name VARCHAR(255),
     qty INT,
-    price FLOAT
+    price DECIMAL(10,2),
+    FOREIGN KEY (bill_id) REFERENCES bills(id) ON DELETE CASCADE
 );

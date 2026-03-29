@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Stock7Flow — iPhone</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+/* ============================
+   ROOT & BODY
+============================= */
+:root {
+  --size: max(8px, 1.2vmin);
+  --height: 80em;
+  --pad: 1.25em;
+  --border-radius: 6.666em;
+  --gutter: calc(var(--pad) * 2);
+  --button-width: 0.333em;
+  --notch-height: 3.33em;
+  --notch-width: 33.3%;
+  --notch-radius: calc(var(--border-radius) - calc(var(--pad) * 2));
+  --notch-duration: 0.333s;
+  --ease: cubic-bezier(.666, 0, .4, 1);
+  --ease-spring: cubic-bezier(.666, 0, .4, 1.2);
+  --ease-out: cubic-bezier(.15, 0, .333, 1);
+  --border-width: 0.4em;
+  --deep-purple: 284;
+  --gold: 30;
+  --space-black: 215;
+  --silver: 254;
+  --c-h: var(--deep-purple);
+  --c-s: 100%;
+  --c-l: 50%;
+}
+
+@keyframes appear {
+  to { transform: scale3d(1,1,1); opacity: 1; }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  background: #0a0a12;
+  display: flex;
+  flex-direction: column;
+  gap: 2em;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  font-size: var(--size);
+  margin: 0;
+  padding: 2em 0;
+}
+
+/* ============================
+   IPHONE SHELL
+============================= */
+.phone {
+  position: relative;
+  z-index: 1;
+  aspect-ratio: 37/76;
+  background: black;
+  height: var(--height);
+  border-radius: var(--border-radius);
+  box-shadow:
+    0 0 0.1em 0.25em hsl(var(--c-h), 20%, 25%),
+    0 0 0 var(--border-width) hsl(var(--c-h), 30%, 85%),
+    0 2em 6em rgba(0,0,0,0.8);
+  opacity: 0;
+  transform: scale3d(1.1, 1.1, 1);
+  animation: appear 1s var(--ease-out) forwards;
+}
+
+.phone::before {
+  content: "";
+  position: absolute;
+  top: var(--border-radius);
+  right: calc(var(--border-width) * -1);
+  bottom: var(--border-radius);
+  left: calc(var(--border-width) * -1);
+  border: 0.5em solid hsl(var(--c-h), 20%, 30%);
+  border-left-width: 0;
+  border-right-width: 0;
+}
+
+/* ============================
+   SIDE BUTTONS
+============================= */
+.buttons { position: absolute; inset: calc(var(--border-width) * -1); pointer-events: none; }
+.buttons .left, .buttons .right {
+  position: absolute;
+  width: var(--button-width);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1.5em;
+}
+.buttons .left { right: 100%; top: calc(var(--border-radius) * 2); }
+.buttons .left .button:nth-child(1) { height: 3em; margin-bottom: 0.5em; }
+.buttons .right { left: 100%; transform: scale3d(-1,1,1); top: calc(var(--border-radius) * 3); }
+.buttons .right .button { height: 9.5em; }
+.buttons .button {
+  background: hsl(var(--c-h), 20%, 95%);
+  height: 6em;
+  box-shadow:
+    inset -0.15em 0 0.1em black,
+    inset 0 0 0.1em hsl(var(--c-h), 30%, 90%),
+    inset 0 0.2em 0.1em hsl(var(--c-h), 30%, 90%),
+    inset 0 -0.2em 0.1em hsl(var(--c-h), 30%, 90%),
+    inset -0.1em 0.333em 0.1em rgba(0,0,0,0.5),
+    inset -0.1em -0.333em 0.1em rgba(0,0,0,0.5);
+  border-top-left-radius: 0.2em;
+  border-bottom-left-radius: 0.2em;
+}
+
+/* ============================
+   SCREEN CONTAINER
+============================= */
+.screen-container {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--border-radius);
+  border: var(--pad) solid black;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+
+.screen-container::before {
+  content: "";
+  position: absolute;
+  z-index: 10;
+  background: white;
+  width: 36.6%;
+  bottom: calc(var(--pad) * 0.75);
+  height: calc(var(--pad) * 0.5);
+  border-radius: calc(var(--pad) * 0.25);
+}
+
+/* ============================
+   BACKGROUND GRADIENT
+============================= */
+.bg {
+  position: absolute;
+  inset: 0;
+  background: black;
+  border-radius: calc(var(--border-radius) - var(--pad));
+  overflow: hidden;
+  z-index: 0;
+}
+
+.bg-section-top {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 55%;
+  background: radial-gradient(
+    150% 100% at 50% 80%,
+    transparent 35%,
+    hsl(calc(var(--deep-purple) + 50), 100%, 99%)
+  ),
+  radial-gradient(
+    120% 120% at 50% 145%,
+    hsl(calc(var(--deep-purple) - 45), 100%, 50%) 50%,
+    transparent
+  ),
+  radial-gradient(
+    85% 125% at 50% 140%,
+    black 66.6%,
+    transparent
+  );
+  background-color: hsl(var(--deep-purple), 100%, 45%);
+  border-radius: calc(var(--border-radius) - var(--pad));
+  border-bottom-left-radius: 20em;
+  border-bottom-right-radius: 20em;
+}
+
+.bg-section-bottom {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 50%;
+  background: radial-gradient(
+    150% 100% at 50% 95%,
+    transparent 15%,
+    hsl(calc(var(--deep-purple) + 5), 100%, 100%)
+  ),
+  radial-gradient(
+    85% 125% at 50% 140%,
+    black 66.6%,
+    transparent
+  );
+  background-color: hsl(calc(var(--deep-purple) - 0), 75%, 70%);
+  border-radius: calc(var(--border-radius) - var(--pad));
+  border-top-left-radius: 20em;
+  border-top-right-radius: 20em;
+  transform: scale3d(1,-1,1);
+}
+
+/* ============================
+   LOCK SCREEN (default view)
+============================= */
+#lock-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: calc(var(--border-radius) - var(--pad));
+  overflow: hidden;
+  background: transparent;
+  transition: opacity 0.5s ease;
+}
+
+#lock-screen.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.lock-time {
+  color: white;
+  font-size: 5em;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.4);
+  margin-bottom: 0.1em;
+}
+
+.lock-date {
+  color: rgba(255,255,255,0.85);
+  font-size: 1.4em;
+  font-weight: 400;
+  margin-bottom: 3em;
+}
+
+.lock-hint {
+  color: rgba(255,255,255,0.6);
+  font-size: 1.1em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5em;
+  animation: bounce 2s infinite;
+}
+
+.lock-hint-icon {
+  font-size: 1.8em;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* ============================
+   APP SCREEN (iframe inside)
+============================= */
+#app-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  border-radius: calc(var(--border-radius) - var(--pad));
+  overflow: hidden;
+  display: none;
+  flex-direction: column;
+  background: #F5F5F7;
+}
+
+#app-screen.visible {
+  display: flex;
+}
+
+/* iOS status bar */
+.ios-status-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  z-index: 20;
+  height: 4em;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 2em 0.6em;
+  background: transparent;
+  pointer-events: none;
+}
+
+.status-time {
+  color: white;
+  font-size: 1.2em;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+.status-icons {
+  display: flex;
+  gap: 0.4em;
+  align-items: center;
+}
+
+.status-icon {
+  color: white;
+  font-size: 1em;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+/* The inner app content area */
+.app-content-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  background: #F5F5F7;
+  padding-top: 4em;
+  padding-bottom: 5em;
+  scrollbar-width: none;
+}
+.app-content-wrapper::-webkit-scrollbar { display: none; }
+
+/* iOS Bottom Tab Bar */
+.ios-tab-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  z-index: 20;
+  height: 5.5em;
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(0,0,0,0.1);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+  padding-top: 0.6em;
+}
+
+.tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2em;
+  cursor: pointer;
+  padding: 0.4em 1em;
+  border-radius: 0.8em;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.tab-item:active { background: rgba(0,0,0,0.05); }
+
+.tab-icon {
+  font-size: 1.8em;
+  line-height: 1;
+}
+
+.tab-label {
+  font-size: 0.9em;
+  font-weight: 500;
+  color: #8e8e93;
+}
+
+.tab-item.active .tab-label { color: #007AFF; }
+.tab-item.active .tab-icon { filter: none; }
+
+/* ============================
+   INNER PAGES
+============================= */
+.page {
+  display: none;
+  padding: 0;
+  animation: pageIn 0.25s ease;
+}
+.page.active { display: block; }
+
+@keyframes pageIn {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* ============================
+   DASHBOARD PAGE
+============================= */
+.app-header {
+  background: linear-gradient(135deg, #1c1c2e 0%, #2d1b69 50%, #11998e 100%);
+  padding: 1.8em 1.8em 2.5em;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+.app-header::after {
+  content: '';
+  position: absolute;
+  top: -30%; right: -20%;
+  width: 70%; height: 150%;
+  background: radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+.app-header-title {
+  font-size: 2em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.1em;
+}
+.app-header-sub {
+  font-size: 1em;
+  opacity: 0.7;
+  font-weight: 400;
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1em;
+  padding: 1.5em 1.5em 0;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 1.4em;
+  padding: 1.4em;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.stat-label {
+  font-size: 0.95em;
+  color: #8e8e93;
+  font-weight: 500;
+  margin-bottom: 0.3em;
+}
+.stat-value {
+  font-size: 2em;
+  font-weight: 700;
+  color: #111;
+  line-height: 1;
+}
+.stat-badge {
+  display: inline-block;
+  margin-top: 0.3em;
+  font-size: 0.8em;
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 0.15em 0.5em;
+  border-radius: 0.5em;
+  font-weight: 500;
+}
+.stat-badge.warning {
+  background: #fff3e0;
+  color: #e65100;
+}
+
+.section-title {
+  font-size: 1.2em;
+  font-weight: 700;
+  color: #111;
+  padding: 1.5em 1.5em 0.5em;
+  letter-spacing: -0.01em;
+}
+
+.product-list {
+  padding: 0 1.5em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8em;
+}
+
+.product-row {
+  background: white;
+  border-radius: 1.2em;
+  padding: 1.2em;
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+}
+
+.product-icon {
+  width: 3.5em;
+  height: 3.5em;
+  border-radius: 0.9em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5em;
+  flex-shrink: 0;
+}
+
+.product-info { flex: 1; min-width: 0; }
+.product-name {
+  font-size: 1.05em;
+  font-weight: 600;
+  color: #111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.product-price {
+  font-size: 0.9em;
+  color: #8e8e93;
+  margin-top: 0.1em;
+}
+
+.product-qty {
+  text-align: right;
+  flex-shrink: 0;
+}
+.qty-num {
+  font-size: 1.2em;
+  font-weight: 700;
+  color: #111;
+}
+.qty-label {
+  font-size: 0.8em;
+  color: #8e8e93;
+}
+
+.low-stock-dot {
+  width: 0.5em;
+  height: 0.5em;
+  background: #ff3b30;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 0.3em;
+}
+
+/* ============================
+   ADD PRODUCT PAGE
+============================= */
+.form-page {
+  padding: 1.5em;
+}
+
+.ios-card {
+  background: white;
+  border-radius: 1.4em;
+  overflow: hidden;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+  margin-bottom: 1.5em;
+}
+
+.ios-card-title {
+  font-size: 0.9em;
+  font-weight: 600;
+  color: #8e8e93;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1.2em 1.4em 0.4em;
+}
+
+.ios-field {
+  display: flex;
+  align-items: center;
+  padding: 1em 1.4em;
+  border-bottom: 1px solid #f2f2f7;
+  gap: 1em;
+}
+.ios-field:last-child { border-bottom: none; }
+
+.ios-field-label {
+  font-size: 1em;
+  color: #111;
+  font-weight: 500;
+  min-width: 5em;
+}
+
+.ios-field-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 1em;
+  font-family: 'Inter', sans-serif;
+  color: #111;
+  text-align: right;
+  background: transparent;
+}
+.ios-field-input::placeholder { color: #c7c7cc; }
+
+.ios-btn {
+  width: 100%;
+  background: #007AFF;
+  color: white;
+  border: none;
+  border-radius: 1.2em;
+  padding: 1.2em;
+  font-size: 1.05em;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  margin-bottom: 0.8em;
+}
+.ios-btn:active { background: #0062CC; transform: scale(0.98); }
+.ios-btn.danger { background: #ff3b30; }
+.ios-btn.success { background: #34c759; }
+.ios-btn.secondary {
+  background: #f2f2f7;
+  color: #007AFF;
+}
+
+/* ============================
+   BILLING PAGE
+============================= */
+.billing-product-item {
+  background: white;
+  border-radius: 1.2em;
+  padding: 1.2em 1.4em;
+  display: flex;
+  align-items: center;
+  gap: 1em;
+  margin-bottom: 0.8em;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+}
+
+.qty-control {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+}
+.qty-btn {
+  width: 2.4em;
+  height: 2.4em;
+  border: none;
+  border-radius: 50%;
+  background: #f2f2f7;
+  color: #111;
+  font-size: 1.3em;
+  font-weight: 400;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.1s;
+  line-height: 1;
+}
+.qty-btn:active { background: #ddd; }
+.qty-display {
+  min-width: 2em;
+  text-align: center;
+  font-size: 1.05em;
+  font-weight: 600;
+  color: #111;
+}
+
+.bill-summary {
+  background: white;
+  border-radius: 1.4em;
+  padding: 1.5em;
+  margin: 0 1.5em 1.5em;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.bill-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4em 0;
+  font-size: 1em;
+  color: #111;
+}
+.bill-row.total {
+  border-top: 1px solid #f2f2f7;
+  margin-top: 0.5em;
+  padding-top: 0.8em;
+  font-weight: 700;
+  font-size: 1.15em;
+}
+
+.bill-receipt {
+  background: white;
+  border-radius: 1.4em;
+  padding: 1.8em;
+  margin: 0 1.5em 1.5em;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  display: none;
+}
+.bill-receipt.visible { display: block; }
+
+.receipt-header {
+  text-align: center;
+  padding-bottom: 1em;
+  border-bottom: 1px dashed #e5e5e5;
+  margin-bottom: 1em;
+}
+.receipt-store { font-size: 1.4em; font-weight: 700; }
+.receipt-addr { font-size: 0.9em; color: #8e8e93; margin-top: 0.2em; }
+.receipt-time { font-size: 0.85em; color: #aaa; margin-top: 0.2em; }
+
+.receipt-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95em;
+  padding: 0.4em 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+.receipt-total {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 1.1em;
+  margin-top: 0.8em;
+  padding-top: 0.8em;
+  border-top: 2px solid #111;
+}
+.receipt-thanks {
+  text-align: center;
+  margin-top: 1em;
+  color: #8e8e93;
+  font-size: 0.9em;
+}
+
+/* ============================
+   ALERT TOAST
+============================= */
+.toast-container {
+  position: absolute;
+  top: 5em;
+  left: 1.5em;
+  right: 1.5em;
+  z-index: 99;
+  pointer-events: none;
+}
+
+.toast {
+  background: rgba(0,0,0,0.85);
+  color: white;
+  border-radius: 1em;
+  padding: 0.9em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  backdrop-filter: blur(10px);
+  transform: translateY(-0.5em);
+  opacity: 0;
+  transition: all 0.3s var(--ease-out);
+}
+.toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* ============================
+   NOTCH
+============================= */
+.notch-container {
+  position: absolute;
+  z-index: 9;
+  top: 2em;
+  right: var(--pad);
+  left: var(--pad);
+  display: flex;
+  justify-content: center;
+  height: 100%;
+  max-height: calc(var(--notch-radius) * 2);
+  pointer-events: none;
+  transition: var(--notch-duration) var(--ease);
+  transition-property: max-height, max-width, filter, transform;
+}
+
+.notch {
+  position: relative;
+  background: black;
+  border-radius: var(--notch-radius);
+  pointer-events: all;
+  overflow: hidden;
+  color: white;
+  display: flex;
+  cursor: pointer;
+  width: 100%;
+  transition: inherit;
+  transition-property: inherit;
+  filter: drop-shadow(0 1em 2em hsla(0,0%,0%,0));
+  transform: scale3d(0.375, 0.4, 1);
+  transform-origin: top;
+}
+
+.camera {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: var(--notch-height);
+  aspect-ratio: 1/1;
+  border-radius: 50%;
+  pointer-events: none;
+  position: absolute;
+  z-index: 10;
+  top: calc(var(--pad) * 1.7);
+  right: calc(50% - calc(var(--notch-width) * 0.5));
+  margin-right: calc(var(--pad) * 0.333);
+}
+.camera::before {
+  content: "";
+  height: 33.3%;
+  aspect-ratio: 1;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0.25em #4c4da3;
+  background:
+    radial-gradient(#6667ac, transparent 50%) no-repeat 33.3% 10% / 75% 50%,
+    radial-gradient(#454680, transparent 50%) no-repeat 60% 85% / 50% 50%;
+  background-color: #080928;
+}
+
+/* ============================
+   PALETTE
+============================= */
+.palette {
+  display: flex;
+  gap: 1.5em;
+}
+
+.swatch {
+  --swatch-size: 4em;
+  width: var(--swatch-size);
+  height: var(--swatch-size);
+  border-radius: 50%;
+  cursor: pointer;
+  border: var(--border-width) solid transparent;
+  transition: 0.333s var(--ease-out);
+  transition-property: border-color, transform, box-shadow;
+  opacity: 0;
+  animation: appear 0.4s var(--ease-out) forwards;
+}
+.swatch:nth-child(1) { animation-delay: 0.7s; }
+.swatch:nth-child(2) { animation-delay: 0.8s; }
+.swatch:nth-child(3) { animation-delay: 0.9s; }
+.swatch:nth-child(4) { animation-delay: 1s; }
+.swatch:hover { transform: scale(1.1); box-shadow: 0 0 0 0.2em rgba(255,255,255,0.3); }
+
+.swatch[data-color="purple"] { background: radial-gradient(circle at 40% 30%, hsl(284,100%,65%), hsl(240,100%,20%)); }
+.swatch[data-color="gold"]   { background: radial-gradient(circle at 40% 30%, hsl(40,100%,65%), hsl(20,100%,30%)); }
+.swatch[data-color="black"]  { background: radial-gradient(circle at 40% 30%, hsl(220,20%,40%), hsl(220,20%,5%)); }
+.swatch[data-color="silver"] { background: radial-gradient(circle at 40% 30%, hsl(0,0%,90%), hsl(0,0%,60%)); }
+
+/* page label */
+.page-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1em 1.5em 0.5em;
+}
+.page-title {
+  font-size: 1.8em;
+  font-weight: 700;
+  color: #111;
+  letter-spacing: -0.02em;
+}
+.add-btn {
+  width: 2.8em;
+  height: 2.8em;
+  border-radius: 50%;
+  background: #007AFF;
+  color: white;
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.add-btn:active { background: #0062CC; }
+
+.empty-state {
+  text-align: center;
+  padding: 3em 2em;
+  color: #8e8e93;
+}
+.empty-icon { font-size: 3em; margin-bottom: 0.3em; }
+.empty-text { font-size: 1em; }
+video::-webkit-media-controls {
+  display: none !important;
+}
+
+video::-webkit-media-controls-enclosure {
+  display: none !important;
+}
+#intro-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  background: black;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: opacity 0.6s ease;
+}
+
+#intro-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease, opacity 0.6s ease;
+}
+
+/* Animation class */
+.intro-hide #intro-video {
+  transform: scale(1.1);
+  opacity: 0;
+}
+</style>
+</head>
+<body>
+
+<!-- Theme radio inputs (hidden) -->
+<input type="radio" name="theme" id="t-purple" checked hidden/>
+<input type="radio" name="theme" id="t-gold" hidden/>
+<input type="radio" name="theme" id="t-black" hidden/>
+<input type="radio" name="theme" id="t-silver" hidden/>
+
+<!-- iPhone -->
+<div class="phone" id="phone">
+
+  <!-- Side Buttons -->
+  <div class="buttons">
+    <div class="left">
+      <div class="button"></div>
+      <div class="button"></div>
+      <div class="button"></div>
+    </div>
+    <div class="right">
+      <div class="button"></div>
+    </div>
+  </div>
+
+  <!-- Camera -->
+  <div class="camera"></div>
+
+  <!-- Notch -->
+  <div class="notch-container">
+    <div class="notch"></div>
+  </div>
+
+  <!-- Screen -->
+  <div class="screen-container">
+
+    <!-- BG Gradient -->
+    <div class="bg">
+      <div class="bg-section-top"></div>
+      <div class="bg-section-bottom"></div>
+    </div>
+    <div id="intro-screen" onclick="startApp()">
+      <video id="intro-video" autoplay muted loop playsinline>
+        <source src="static/iosvideo.mp4" type="video/mp4">
+      </video>
+    </div>
+    <!-- LOCK SCREEN -->
+    <div id="lock-screen" onclick="unlockPhone()">
+      <div class="lock-time" id="lock-time">12:00</div>
+      <div class="lock-date" id="lock-date">Sunday, March 29</div>
+      <div class="lock-hint">
+        <div class="lock-hint-icon">👆</div>
+        <div>Tap to open Stock7Flow</div>
+      </div>
+    </div>
+
+    <!-- APP SCREEN -->
+    <div id="app-screen">
+
+      <!-- Status Bar -->
+      <div class="ios-status-bar">
+        <div class="status-time" id="app-time">12:00</div>
+        <div class="status-icons">
+          <span class="status-icon">●●●</span>
+          <span class="status-icon">WiFi</span>
+          <span class="status-icon">🔋</span>
+        </div>
+      </div>
+
+      <!-- Toast -->
+      <div class="toast-container">
+        <div class="toast" id="toast"></div>
+      </div>
+
+      <!-- Pages -->
+      <div class="app-content-wrapper" id="content-wrapper">
+
+        <!-- DASHBOARD -->
+        <div class="page active" id="page-dashboard">
+          <div class="app-header">
+            <div class="app-header-title">🗣️ Stock7Flow</div>
+            <div class="app-header-sub">Grocery Inventory Manager</div>
+          </div>
+          <div class="stats-row" id="stats-row">
+            <div class="stat-card">
+              <div class="stat-label">Total Products</div>
+              <div class="stat-value" id="stat-total">0</div>
+              <div class="stat-badge">In Stock</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Low Stock</div>
+              <div class="stat-value" id="stat-low">0</div>
+              <div class="stat-badge warning" id="low-badge">Items</div>
+            </div>
+          </div>
+          <div class="section-title">Products Overview</div>
+          <div class="product-list" id="dash-products"></div>
+        </div>
+
+        <!-- PRODUCTS -->
+        <div class="page" id="page-products">
+          <div class="page-header-bar">
+            <div class="page-title">Products</div>
+            <button class="add-btn" onclick="showAddForm()">+</button>
+          </div>
+          <div class="product-list" id="products-list"></div>
+          <div style="height: 1em;"></div>
+        </div>
+
+        <!-- ADD PRODUCT (sub-page) -->
+        <div class="page" id="page-add">
+          <div class="page-header-bar">
+            <div class="page-title" id="add-form-title">Add Product</div>
+          </div>
+          <div class="form-page">
+            <div class="ios-card">
+              <div class="ios-card-title">Product Info</div>
+              <div class="ios-field">
+                <div class="ios-field-label">Name</div>
+                <input class="ios-field-input" id="f-name" placeholder="e.g. Tomatoes" autocomplete="off"/>
+              </div>
+              <div class="ios-field">
+                <div class="ios-field-label">Price ₹</div>
+                <input class="ios-field-input" id="f-price" type="number" placeholder="0.00" min="0"/>
+              </div>
+              <div class="ios-field">
+                <div class="ios-field-label">Quantity</div>
+                <input class="ios-field-input" id="f-qty" type="number" placeholder="0" min="0"/>
+              </div>
+              <div class="ios-field">
+                <div class="ios-field-label">Reorder At</div>
+                <input class="ios-field-input" id="f-reorder" type="number" placeholder="10" min="0"/>
+              </div>
+            </div>
+            <button class="ios-btn" id="save-product-btn" onclick="saveProduct()">Save Product</button>
+            <button class="ios-btn secondary" onclick="navTo('page-products')">Cancel</button>
+            <button class="ios-btn danger" id="delete-product-btn" onclick="deleteProduct()" style="display:none;">Delete Product</button>
+          </div>
+        </div>
+
+        <!-- BILLING -->
+        <div class="page" id="page-billing">
+          <div class="page-header-bar">
+            <div class="page-title">Billing</div>
+          </div>
+          <div style="padding: 0 1.5em 1em; color: #8e8e93; font-size: 0.95em;">
+            Select quantities to generate a bill
+          </div>
+          <div class="product-list" id="billing-list"></div>
+
+          <div class="bill-summary" id="bill-summary" style="display:none;">
+            <div class="section-title" style="padding: 0 0 0.5em; font-size: 1.1em;">Summary</div>
+            <div id="bill-items-summary"></div>
+            <div class="bill-row total">
+              <span>Grand Total</span>
+              <span id="bill-grand-total">₹0.00</span>
+            </div>
+          </div>
+
+          <div id="generate-bill-area" style="padding: 0 1.5em 1em; display:none;">
+            <button class="ios-btn" onclick="generateBill()">Generate Bill</button>
+          </div>
+
+          <div class="bill-receipt" id="bill-receipt">
+            <div class="receipt-header">
+              <div class="receipt-store">🗿 7 Store</div>
+              <div class="receipt-addr">Ganapathy, Coimbatore</div>
+              <div class="receipt-time" id="receipt-time"></div>
+            </div>
+            <div id="receipt-items"></div>
+            <div class="receipt-total">
+              <span>Total</span>
+              <span id="receipt-total">₹0.00</span>
+            </div>
+            <div class="receipt-thanks">Thank you for shopping with us! 🙏</div>
+            <button class="ios-btn secondary" style="margin-top:1em;" onclick="resetBill()">New Bill</button>
+          </div>
+        </div>
+
+        <!-- EXPORT / HISTORY -->
+        <div class="page" id="page-history">
+          <div class="page-header-bar">
+            <div class="page-title">History</div>
+          </div>
+          <div style="padding: 0 1.5em;">
+            <div class="ios-card">
+              <div class="ios-card-title">Bill History</div>
+              <div id="bill-history-list" style="padding: 0.5em 0;"></div>
+            </div>
+            <button class="ios-btn secondary" onclick="exportCSV()" style="margin-top:0.5em;">
+              📥 Export as CSV
+            </button>
+          </div>
+        </div>
+
+      </div><!-- end content-wrapper -->
+
+      <!-- Tab Bar -->
+      <div class="ios-tab-bar">
+        <div class="tab-item active" id="tab-dashboard" onclick="switchTab('dashboard')">
+          <div class="tab-icon">📊</div>
+          <div class="tab-label">Dashboard</div>
+        </div>
+        <div class="tab-item" id="tab-products" onclick="switchTab('products')">
+          <div class="tab-icon">📦</div>
+          <div class="tab-label">Products</div>
+        </div>
+        <div class="tab-item" id="tab-billing" onclick="switchTab('billing')">
+          <div class="tab-icon">🧾</div>
+          <div class="tab-label">Billing</div>
+        </div>
+        <div class="tab-item" id="tab-history" onclick="switchTab('history')">
+          <div class="tab-icon">📋</div>
+          <div class="tab-label">History</div>
+        </div>
+      </div>
+
+    </div><!-- end app-screen -->
+
+  </div><!-- end screen-container -->
+</div><!-- end phone -->
+
+<!-- Color Palette -->
+
+
+<script>
+/* ============================
+   DATA STORE
+============================= */
+let products = [];
+let billHistory = [];
+let editingId = null;
+let billQtys = {};
+
+
+function productIcon(name) {
+  if (!name) return '?';
+  return name.charAt(0).toUpperCase();
+}
+const BG_COLORS = ['#FFF3E0','#E8F5E9','#E3F2FD','#FCE4EC','#F3E5F5','#E0F7FA','#FFF8E1'];
+function productBg(name) {
+  return BG_COLORS[name.charCodeAt(0) % BG_COLORS.length];
+}
+
+async function loadProducts() {
+  const res = await fetch('/api/products');
+  const data = await res.json();
+
+  products = data.map(p => ({
+    id: p.id,
+    name: p.name,
+    price: p.price,
+    qty: p.qty,
+    reorder: p.reorder_level
+  }));
+
+  renderDashboard();
+  renderProducts();
+  setTimeout(() => {
+  billQtys = {};
+  renderBilling();
+}, 300);
+}
+async function saveProduct() {
+  const name = document.getElementById('f-name').value.trim();
+  const price = parseFloat(document.getElementById('f-price').value) || 0;
+  const qty = parseInt(document.getElementById('f-qty').value) || 0;
+  const reorder = parseInt(document.getElementById('f-reorder').value) || 10;
+
+  if (!name) {
+    showToast('⚠️ Product name required');
+    return;
+  }
+
+  if (editingId) {
+    await fetch(`/api/products/${editingId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, price, qty, reorder })
+    });
+    showToast('✅ Updated');
+  } else {
+    await fetch('/api/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, price, qty, reorder })
+    });
+    showToast('✅ Added');
+  }
+
+  editingId = null;
+  await loadProducts();
+  navTo('page-products');
+}
+function startApp() {
+  const intro = document.getElementById('intro-screen');
+
+  // Start animation
+  intro.classList.add('intro-hide');
+
+  setTimeout(() => {
+    intro.style.display = 'none';
+
+    // ✅ SHOW LOCK SCREEN (NOT app directly)
+    const lock = document.getElementById('lock-screen');
+    lock.classList.remove('hidden');
+
+  }, 600);
+}
+function genId() { return Date.now() + Math.floor(Math.random()*1000); }
+
+/* ============================
+   CLOCK
+============================= */
+function updateClock() {
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0');
+  const mm = String(now.getMinutes()).padStart(2,'0');
+  const t = `${hh}:${mm}`;
+  document.getElementById('lock-time').textContent = t;
+  document.getElementById('app-time').textContent = t;
+
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const d = `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}`;
+  document.getElementById('lock-date').textContent = d;
+}
+updateClock();
+setInterval(updateClock, 10000);
+
+/* ============================
+   LOCK / UNLOCK
+============================= */
+function unlockPhone() {
+  document.getElementById('lock-screen').classList.add('hidden');
+  document.getElementById('app-screen').classList.add('visible');
+
+  loadProducts();
+  loadHistory();
+}
+
+/* ============================
+   THEME
+============================= */
+function setTheme(hue, color) {
+  document.documentElement.style.setProperty('--c-h', hue);
+  document.querySelectorAll('.swatch').forEach(s => {
+    s.style.outline = s.dataset.color === color ? '3px solid rgba(255,255,255,0.8)' : '';
+    s.style.outlineOffset = '3px';
+  });
+}
+
+/* ============================
+   NAVIGATION
+============================= */
+function navTo(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+  document.getElementById('content-wrapper').scrollTop = 0;
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  navTo('page-' + tab);
+}
+
+/* ============================
+   TOAST
+============================= */
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+/* ============================
+   DASHBOARD
+============================= */
+function renderDashboard() {
+  const lowStock = products.filter(p => p.qty <= p.reorder);
+  document.getElementById('stat-total').textContent = products.length;
+  document.getElementById('stat-low').textContent = lowStock.length;
+
+  const dash = document.getElementById('dash-products');
+  if (!products.length) {
+    dash.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-text">No products yet. Add some!</div></div>`;
+    return;
+  }
+
+  dash.innerHTML = products.map(p => `
+    <div class="product-row" onclick="editProduct(${p.id})">
+      <div class="product-icon" style="background:${productBg(p.name)}">${productIcon(p.name)}</div>
+      <div class="product-info">
+        <div class="product-name">${p.name}</div>
+        <div class="product-price">₹${Number(p.price).toFixed(2)}</div>
+      </div>
+      <div class="product-qty">
+        <div class="qty-num" style="color:${p.qty <= p.reorder ? '#ff3b30':'#111'}">${p.qty}</div>
+        <div class="qty-label">units</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ============================
+   PRODUCTS PAGE
+============================= */
+function renderProducts() {
+  const list = document.getElementById('products-list');
+  if (!products.length) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-text">No products yet.<br>Tap + to add one.</div></div>`;
+    return;
+  }
+  list.innerHTML = products.map(p => `
+    <div class="product-row" onclick="editProduct(${p.id})">
+      <div class="product-icon" style="background:${productBg(p.name)}">${productIcon(p.name)}</div>
+      <div class="product-info">
+        <div class="product-name">${p.qty <= p.reorder ? '<span class="low-stock-dot"></span>':''}${p.name}</div>
+        <div class="product-price">₹${Number(p.price).toFixed(2)} · Stock: ${p.qty} · Reorder: ${p.reorder}</div>
+      </div>
+      <div style="color:#c7c7cc; font-size:1.2em;">›</div>
+    </div>
+  `).join('');
+}
+
+/* ============================
+   ADD / EDIT FORM
+============================= */
+function showAddForm() {
+  editingId = null;
+  document.getElementById('add-form-title').textContent = 'Add Product';
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-price').value = '';
+  document.getElementById('f-qty').value = '';
+  document.getElementById('f-reorder').value = '10';
+  document.getElementById('delete-product-btn').style.display = 'none';
+  navTo('page-add');
+}
+
+function editProduct(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  editingId = id;
+  document.getElementById('add-form-title').textContent = 'Edit Product';
+  document.getElementById('f-name').value = p.name;
+  document.getElementById('f-price').value = p.price;
+  document.getElementById('f-qty').value = p.qty;
+  document.getElementById('f-reorder').value = p.reorder;
+  document.getElementById('delete-product-btn').style.display = 'block';
+  navTo('page-add');
+}
+
+async function deleteProduct() {
+  if (!editingId) return;
+
+  await fetch(`/api/products/${editingId}`, {
+    method: 'DELETE'
+  });
+
+  showToast('🗑 Deleted');
+  editingId = null;
+
+  await loadProducts();
+
+// 🔥 SHOW RECEIPT AGAIN AFTER REFRESH
+
+  navTo('page-products');
+}
+
+/* ============================
+   BILLING
+============================= */
+function renderBilling() {
+  const list = document.getElementById('billing-list');
+
+  if (!products.length) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">🛒</div>
+      <div class="empty-text">Add products first</div>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = products.map(p => `
+    <div class="billing-product-item">
+      <div class="product-icon" style="background:${productBg(p.name)}">${productIcon(p.name)}</div>
+      <div class="product-info">
+        <div class="product-name">${p.name}</div>
+        <div class="product-price">₹${Number(p.price).toFixed(2)} · Stock: ${p.qty}</div>
+      </div>
+      <div class="qty-control">
+        <button class="qty-btn" onclick="changeBillQty(${p.id}, -1)">−</button>
+        <div class="qty-display" id="bq-${p.id}">${billQtys[p.id] || 0}</div>
+        <button class="qty-btn" onclick="changeBillQty(${p.id}, 1)">+</button>
+      </div>
+    </div>
+  `).join('');
+
+  if (!Object.values(billQtys).some(q => q > 0)) {
+    document.getElementById('bill-summary').style.display = 'none';
+    document.getElementById('generate-bill-area').style.display = 'none';
+  }
+
+  // ✅ DO NOT TOUCH RECEIPT HERE
+}
+function resetBill() {
+  billQtys = {};
+
+  document.getElementById('bill-receipt').classList.remove('visible');
+
+  setTimeout(() => {
+    billQtys = {};
+    renderBilling();
+  }, 300);
+}
+
+function changeBillQty(id, delta) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  const cur = billQtys[id] || 0;
+  const next = Math.max(0, Math.min(p.qty, cur + delta));
+  billQtys[id] = next;
+  document.getElementById('bq-'+id).textContent = next;
+  updateBillSummary();
+}
+
+function updateBillSummary() {
+  const items = [];
+  let total = 0;
+  for (const id in billQtys) {
+    if (billQtys[id] > 0) {
+      const p = products.find(x => x.id == id);
+      if (p) {
+        items.push({ name: p.name, qty: billQtys[id], price: p.price, sub: p.price * billQtys[id] });
+        total += p.price * billQtys[id];
+      }
+    }
+  }
+
+  const summary = document.getElementById('bill-summary');
+  const genArea = document.getElementById('generate-bill-area');
+
+  if (items.length > 0) {
+    summary.style.display = 'block';
+    genArea.style.display = 'block';
+    document.getElementById('bill-items-summary').innerHTML = items.map(i =>
+      `<div class="bill-row"><span>${i.name} ×${i.qty}</span><span>₹${i.sub.toFixed(2)}</span></div>`
+    ).join('');
+    document.getElementById('bill-grand-total').textContent = '₹' + total.toFixed(2);
+  } else {
+    summary.style.display = 'none';
+    genArea.style.display = 'none';
+  }
+}
+
+async function generateBill() {
+  const items = [];
+  let total = 0;
+
+  for (const id in billQtys) {
+    if (billQtys[id] > 0) {
+      const p = products.find(x => x.id == id);
+      if (p) {
+        const qty = billQtys[id];
+        const sub = p.price * qty;
+
+        items.push({
+          product_id: p.id,
+          product_name: p.name,
+          qty: qty,
+          price: p.price
+        });
+
+        total += sub;
+      }
+    }
+  }
+
+  if (!items.length) {
+    showToast('⚠️ No items selected');
+    return;
+  }
+
+  const res = await fetch('/api/bills', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ items, total })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    showToast('✅ Bill saved!');
+
+    const receipt = document.getElementById('bill-receipt');
+    const receiptItems = document.getElementById('receipt-items');
+
+    receipt.classList.add('visible');
+
+    document.getElementById('receipt-time').textContent =
+      new Date().toLocaleString('en-IN');
+
+    receiptItems.innerHTML = items.map(i => `
+      <div class="receipt-item">
+        <span>${i.product_name} ×${i.qty}</span>
+        <span>₹${(i.qty * i.price).toFixed(2)}</span>
+      </div>
+    `).join('');
+
+    document.getElementById('receipt-total').textContent =
+      '₹' + total.toFixed(2);
+
+    // ✅ RESET + REFRESH
+// ❌ REMOVE AUTO RESET COMPLETELY
+
+    // ✅ SCROLL ONLY AFTER SUCCESS
+    receipt.scrollIntoView({ behavior: 'smooth' });
+  }
+}
+/* ============================
+   HISTORY
+============================= */
+function renderHistory() {
+  const list = document.getElementById('bill-history-list');
+
+  if (!billHistory.length) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <div class="empty-text">No bills yet</div>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = billHistory.slice(0,20).map(b => `
+    <div class="ios-field" style="flex-direction:column; align-items:flex-start; gap:0.2em;">
+      <div style="display:flex; justify-content:space-between; width:100%;">
+        <span style="font-weight:600; color:#111;">₹${Number(b.total).toFixed(2)}</span>
+        <span style="color:#007AFF; font-weight:600;">
+          ${(b.items || []).length} item${(b.items || []).length !== 1 ? 's' : ''}
+        </span>
+      </div>
+      <div style="font-size:0.85em; color:#8e8e93;">${b.date || 'No Date'}</div>
+      <div style="font-size:0.85em; color:#aaa;">
+        ${(b.items || []).map(i => i.name + '×' + i.qty).join(', ')}
+      </div>
+    </div>
+  `).join('');
+}
+async function loadHistory() {
+  const res = await fetch('/api/bills');
+  const data = await res.json();
+
+  billHistory = data.map(b => ({
+    id: b.id,
+
+    // ✅ FIX
+    total: Number(b.total) || 0,
+
+    // ✅ FIX
+    date: b.date,
+
+    // ✅ FIX
+    items: (b.items || []).map(i => ({
+      name: i.product_name || 'Item',
+      qty: i.qty || 0
+    }))
+  }));
+
+  renderHistory();
+}
+function exportCSV() {
+  const rows = [['Product','Price','Quantity','Reorder Level']];
+  products.forEach(p => rows.push([p.name, p.price, p.qty, p.reorder]));
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'stock7flow_export.csv'; a.click();
+  showToast('📥 CSV exported!');
+}
+
+/* ============================
+   SEED DATA (if empty)
+============================= */
+
+
+</script>
+</body>
+</html>
